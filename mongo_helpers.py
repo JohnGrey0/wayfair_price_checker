@@ -24,7 +24,7 @@ class mongo:
 if __name__ == '__main__':
     db = mongo(database='mydbs', collection='price_checker')
     results = db.query_match(column='target', value=175)
-    records = list
+    records = list()
     for result in results:
         records.append(result)
 
