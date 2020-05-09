@@ -11,8 +11,7 @@ class mongo:
         self.collection.insert_one(payload).inserted_id
 
     def query_match(self, column, value):
-        query = {column: value}
-        return [item for item in self.collection.find(query)]
+        return [item for item in self.collection.find({column: value})]
         
 
     def update(self, query: str, new_values: dict):

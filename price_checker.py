@@ -65,18 +65,14 @@ def find_wayfair_item_info(items):
 
 
 def products_to_price_check():
-    data = []
-    # with open(filepath, 'r') as file:
-    #     for line in file:
-    #         dictionary = {}
-    #         currentline = line.split(',')
-    #         dictionary['url'] = currentline[0]
-    #         dictionary['target'] = float(currentline[1])
-    #         dictionary['send_to'] = currentline[2].strip()
-    #         dictionary['seller'] = currentline[3].strip()
-    #         data.append(dictionary)
-    return data
+    db = mongo(database='mydbs', collection='price_checker')
+    return db.query_match(column='seller', value='wayfair')
 
+def update_target_price_of_item(item):
+    db = mongo(database='mydbs', collection='price_checker')
+    query = { "url": item['url']}
+    new_values = { "$set": { "target": item['price'] } }
+    db.update(query, new_values)
 
 def get_info_for_items():
     items = products_to_price_check()
@@ -85,17 +81,17 @@ def get_info_for_items():
             item.update(find_wayfair_item_info(item))
     return items
 
-
 def price_checker():
     items = get_info_for_items()
     for item in items:
         print(item)
         if item['price'] <= item['target']:
-            body = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(
-            url=item['url'], target=item['target'], current_price=item['price'])
-            msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body)
             item['subject'] = '{title} - price fell! Now ${price}'.format(title=item['title'], price=item['price'])
-            send_price_check_email()
+            body = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(url=item['url'], target=item['target'], current_price=item['price'])
+            item['msg'] = 'Subject: {subject}\n\n{body}'.format(subject=item['subject'], body=item['body'])
+            send_price_check_email(item)
+            update_target_price_of_item(item)
+            
 
 if __name__ == '__main__':
     price_checker()
