@@ -12,7 +12,8 @@ class mongo:
 
     def query_match(self, column, value):
         query = {column: value}
-        return self.collection.find(query)
+        return [item for item in self.collection.find(query)]
+        
 
     def update(self, query: str, new_values: dict):
         # Example:
@@ -24,8 +25,4 @@ class mongo:
 if __name__ == '__main__':
     db = mongo(database='mydbs', collection='price_checker')
     results = db.query_match(column='target', value=175)
-    records = list()
-    for result in results:
-        records.append(result)
-
-    print(records)
+    print(results)
