@@ -3,11 +3,11 @@ import configparser
 from datetime import datetime
 import os
 import pathlib
-import pymongo
 import requests
 import smtplib
 import sys
 import time
+from mongo_helpers import mongo
 
 
 def get_abs_path():
@@ -29,7 +29,6 @@ def get_config():
     config.read(convert_path_slashes(config_path))
     return config
 
-
 def send_price_check_email(item):
     config = get_config()
     server = smtplib.SMTP(config.get('GMAIL', 'host'),
@@ -39,13 +38,9 @@ def send_price_check_email(item):
     server.ehlo()
     server.login(user=config.get('GMAIL', 'email'),
                  password=config.get('GMAIL', 'password'))
-    subject = '{title} - price fell! Now ${price}'.format(
-        title=item['title'], price=item['price'])
-    body = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(
-        url=item['url'], target=item['target'], current_price=item['price'])
-    msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body)
+
     server.sendmail(config.get('GMAIL', 'email'),
-                    item['send_to'], msg)
+                    item['email'], item['msg'])
     server.quit()
 
 
@@ -71,18 +66,15 @@ def find_wayfair_item_info(items):
 
 def products_to_price_check():
     data = []
-    filepath = '{abs}/{filepath}'.format(abs=get_abs_path(),
-                                         filepath='products.txt')
-    filepath = convert_path_slashes(filepath)
-    with open(filepath, 'r') as file:
-        for line in file:
-            dictionary = {}
-            currentline = line.split(',')
-            dictionary['url'] = currentline[0]
-            dictionary['target'] = float(currentline[1])
-            dictionary['send_to'] = currentline[2].strip()
-            dictionary['seller'] = currentline[3].strip()
-            data.append(dictionary)
+    # with open(filepath, 'r') as file:
+    #     for line in file:
+    #         dictionary = {}
+    #         currentline = line.split(',')
+    #         dictionary['url'] = currentline[0]
+    #         dictionary['target'] = float(currentline[1])
+    #         dictionary['send_to'] = currentline[2].strip()
+    #         dictionary['seller'] = currentline[3].strip()
+    #         data.append(dictionary)
     return data
 
 
@@ -90,7 +82,7 @@ def get_info_for_items():
     items = products_to_price_check()
     for item in items:
         if item['seller'] == 'wayfair':
-            item = find_wayfair_item_info(item)
+            item.update(find_wayfair_item_info(item))
     return items
 
 
@@ -99,7 +91,11 @@ def price_checker():
     for item in items:
         print(item)
         if item['price'] <= item['target']:
-            send_price_check_email(item)
+            body = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(
+            url=item['url'], target=item['target'], current_price=item['price'])
+            msg = 'Subject: {subject}\n\n{body}'.format(subject=subject, body=body)
+            item['subject'] = '{title} - price fell! Now ${price}'.format(title=item['title'], price=item['price'])
+            send_price_check_email()
 
 if __name__ == '__main__':
     price_checker()
