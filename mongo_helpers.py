@@ -21,7 +21,7 @@ class mongo:
         return self.collection.update_one(query, new_values)
 
 
-if __name__ == '__main__':
-    db = mongo(database='mydbs', collection='price_checker')
-    results = db.query_match(column='target', value=175)
-    print(results)
+# if __name__ == '__main__':
+#     db = mongo(database='mydbs', collection='price_checker')
+#     results = db.query_match(column='target', value=175)
+#     print(results)
