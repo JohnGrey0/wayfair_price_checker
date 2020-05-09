@@ -87,7 +87,7 @@ def price_checker():
         print(item)
         if item['price'] <= item['target']:
             item['subject'] = '{title} - price fell! Now ${price}'.format(title=item['title'], price=item['price'])
-            body = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(url=item['url'], target=item['target'], current_price=item['price'])
+            item['body'] = 'Check this link - {url} \n Price below target from ${target} to ${current_price}'.format(url=item['url'], target=item['target'], current_price=item['price'])
             item['msg'] = 'Subject: {subject}\n\n{body}'.format(subject=item['subject'], body=item['body'])
             send_price_check_email(item)
             update_target_price_of_item(item)
